@@ -20,7 +20,7 @@ brainfork-go test/Correct-Cases/Parallel.bf
 [Correct-Cases](test/Correct-Cases) ,[Incorrect-Cases](test/Incorrect-Cases)のテストケースを使ってテストが行われます。
 
 ## 追加された構文
-以下は、[Brainfork](https://github.com/n4mlz/Brainfork)のソースコードを読みながら、私が推測したものです。     
+以下は、[Brainfork](https://github.com/n4mlz/Brainfork)のソースコードを読みながら、私が推測したものです。一部、[n4mlzさん](https://github.com/n4mlz)にご教示いただきました。     
 これら以外のものは[Brainfuxk](https://ja.wikipedia.org/wiki/Brainfuck)と同等です。     
 ?は私が理解できていない部分です。
 |文字|動作|
@@ -29,11 +29,11 @@ brainfork-go test/Correct-Cases/Parallel.bf
 |\||そのスレッドにおける並行処理の区切り。`+++.`と`---.`を平行処理したい場合、`+++.\|---.`になる|
 |}|スレッド開始の終端|
 |(|現在のptrが指し示すメモリデータをロックする|
-|)|現在のptrが指し示すメモリデータをアンロックする|
+|)|対応する`)`が実行された時のptrが指し示すメモリデータをアンロックする|
 |~|100ms待つ|
-|^|現在のptrが指し示すメモリデータがアンロックされるまで待つ|
-|v|?|
-|;|?|
+|^|現在のptrが指し示すメモリデータで待機し、処理を一時停止する|
+|v|現在のptrが指し示すメモリデータで待機していたすべてのスレッドを再開する|
+|;|これ以降、改行までコメントアウトする|
 
 ## 🎫LICENSE
 
