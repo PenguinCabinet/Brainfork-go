@@ -8,6 +8,8 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	broadcastchannel "github.com/Maki-Daisuke/go-broadcast-channel"
 )
 
 var chars = map[rune]string{
@@ -142,6 +144,8 @@ func getchar() rune {
 var VM_mem_size int = 1024
 var wait_chan []chan bool
 
+var broadcasts []*broadcastchannel.Broadcaster[bool]
+
 func program_run(program []string, mem *[]byte, mem_Mutex *[]sync.Mutex, mem_count int) {
 
 	for program_count := 0; program_count < len(program); program_count++ {
@@ -207,13 +211,15 @@ func program_run(program []string, mem *[]byte, mem_Mutex *[]sync.Mutex, mem_cou
 				}
 			}
 
+			mem_temp := make([]byte, VM_mem_size)
+			mem_Mutex_temp := make([]sync.Mutex, VM_mem_size)
+
+			copy(mem_temp, *mem)
+			copy(mem_Mutex_temp, *mem_Mutex)
+
 			var wg sync.WaitGroup
 			for _, e := range thread_programs {
-				mem_temp := make([]byte, VM_mem_size)
-				mem_Mutex_temp := make([]sync.Mutex, VM_mem_size)
 
-				copy(*mem, mem_temp)
-				copy(*mem_Mutex, mem_Mutex_temp)
 				e2 := e
 				mem_count_temp := mem_count
 
@@ -245,9 +251,11 @@ func program_run(program []string, mem *[]byte, mem_Mutex *[]sync.Mutex, mem_cou
 			(*mem_Mutex)[mem_count].Unlock()
 
 		case chars['^']:
-			<-wait_chan[mem_count]
+			ch := make(chan bool)
+			broadcasts[mem_count].Subscribe(ch)
+			<-ch
 		case chars['v']:
-			wait_chan[mem_count] <- true
+			broadcasts[mem_count].Chan() <- true
 		}
 	}
 }
@@ -276,6 +284,14 @@ func interpreter_main(args []string) {
 	for i := 0; i < VM_mem_size; i++ {
 		wait_chan[i] = make(chan bool)
 	}
+
+	broadcasts = make([]*broadcastchannel.Broadcaster[bool], VM_mem_size)
+
+	for i := 0; i < VM_mem_size; i++ {
+		broadcasts[i] = broadcastchannel.New[bool](0).WithTimeout(100 * time.Microsecond)
+		defer broadcasts[i].Close()
+	}
+
 	program_run(splited_program, &mem, &mem_Mutex, 0)
 }
 
