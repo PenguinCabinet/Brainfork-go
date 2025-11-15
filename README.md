@@ -16,6 +16,12 @@ brainfork-go input-brainfork-sourcecode.bf
 ```
 brainfork-go test/Correct-Cases/Parallel.bf
 ```
+```
+brainfork-go test/Correct-Cases/Parallel2.bf
+```
+```
+brainfork-go test/Correct-Cases/comment.bf
+```
 
 [Correct-Cases](test/Correct-Cases) ,[Incorrect-Cases](test/Incorrect-Cases)のテストケースを使ってテストが行われます。
 

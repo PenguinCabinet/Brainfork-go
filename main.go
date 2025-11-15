@@ -68,7 +68,19 @@ func program_check(program []string) []string {
 	nest1 := 0
 	nest2 := 0
 	nest3 := 0
+	comment_flag := false
 	for _, e := range program {
+		if e[0] == '\n' || e[0] == '\r' {
+			comment_flag = false
+			continue
+		}
+		if comment_flag {
+			continue
+		}
+		if e == chars[';'] {
+			comment_flag = true
+			continue
+		}
 		if e == chars['<'] ||
 			e == chars['>'] ||
 			e == chars['+'] ||
@@ -128,8 +140,11 @@ func getchar() rune {
 }
 
 var VM_mem_size int = 1024
+var wait_chan []chan bool
 
 func program_run(program []string, mem *[]byte, mem_Mutex *[]sync.Mutex, mem_count int) {
+
+	//fmt.Printf("%v\n\n\n\n", program)
 
 	for program_count := 0; program_count < len(program); program_count++ {
 		switch program[program_count] {
@@ -181,17 +196,16 @@ func program_run(program []string, mem *[]byte, mem_Mutex *[]sync.Mutex, mem_cou
 		case chars['{']:
 			var thread_programs [][]string
 
-			program_count_temp := program_count
 			program_count_thread_start := program_count
 			for true {
-				program_count_temp++
-				if program[program_count_temp] == "}" {
-					thread_programs = append(thread_programs, program[(program_count_thread_start+1):program_count_temp])
+				program_count++
+				if program[program_count] == "}" {
+					thread_programs = append(thread_programs, program[(program_count_thread_start+1):program_count])
 					break
 				}
-				if program[program_count_temp] == "|" {
-					thread_programs = append(thread_programs, program[(program_count_thread_start+1):program_count_temp])
-					program_count_thread_start = program_count_temp
+				if program[program_count] == "|" {
+					thread_programs = append(thread_programs, program[(program_count_thread_start+1):program_count])
+					program_count_thread_start = program_count
 				}
 			}
 
@@ -203,10 +217,11 @@ func program_run(program []string, mem *[]byte, mem_Mutex *[]sync.Mutex, mem_cou
 				copy(*mem, mem_temp)
 				copy(*mem_Mutex, mem_Mutex_temp)
 				e2 := e
+				mem_count_temp := mem_count
 
 				wg.Add(1)
 				go (func() {
-					program_run(e2, &mem_temp, &mem_Mutex_temp, mem_count)
+					program_run(e2, &mem_temp, &mem_Mutex_temp, mem_count_temp)
 					wg.Done()
 				})()
 			}
@@ -230,9 +245,11 @@ func program_run(program []string, mem *[]byte, mem_Mutex *[]sync.Mutex, mem_cou
 			(*mem_Mutex)[mem_count].Lock()
 			program_run(program[(program_count_start+1):program_count], mem, mem_Mutex, mem_count)
 			(*mem_Mutex)[mem_count].Unlock()
+
 		case chars['^']:
-			(*mem_Mutex)[mem_count].Lock()
-			(*mem_Mutex)[mem_count].Unlock()
+			<-wait_chan[mem_count]
+		case chars['v']:
+			wait_chan[mem_count] <- true
 		}
 	}
 }
@@ -257,6 +274,10 @@ func interpreter_main(args []string) {
 	mem := make([]byte, VM_mem_size)
 	mem_Mutex := make([]sync.Mutex, VM_mem_size)
 
+	wait_chan = make([]chan bool, VM_mem_size)
+	for i := 0; i < VM_mem_size; i++ {
+		wait_chan[i] = make(chan bool)
+	}
 	program_run(splited_program, &mem, &mem_Mutex, 0)
 }
 
