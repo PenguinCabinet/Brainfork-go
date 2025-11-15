@@ -144,8 +144,6 @@ var wait_chan []chan bool
 
 func program_run(program []string, mem *[]byte, mem_Mutex *[]sync.Mutex, mem_count int) {
 
-	//fmt.Printf("%v\n\n\n\n", program)
-
 	for program_count := 0; program_count < len(program); program_count++ {
 		switch program[program_count] {
 		case chars['>']:
