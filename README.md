@@ -28,7 +28,6 @@ brainfork-go test/Correct-Cases/comment.bf
 ## 追加された構文
 以下は、[Brainfork](https://github.com/n4mlz/Brainfork)のソースコードを読みながら、私が推測したものです。一部、[n4mlzさん](https://github.com/n4mlz)にご教示いただきました。     
 これら以外のものは[Brainfuxk](https://ja.wikipedia.org/wiki/Brainfuck)と同等です。     
-?は私が理解できていない部分です。
 |文字|動作|
 |---|---|
 |{|`}`までのプログラムを、スレッドにして開始する|

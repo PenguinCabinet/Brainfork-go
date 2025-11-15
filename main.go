@@ -142,7 +142,6 @@ func getchar() rune {
 }
 
 var VM_mem_size int = 1024
-var wait_chan []chan bool
 
 var broadcasts []*broadcastchannel.Broadcaster[bool]
 
@@ -211,12 +210,6 @@ func program_run(program []string, mem *[]byte, mem_Mutex *[]sync.Mutex, mem_cou
 				}
 			}
 
-			mem_temp := make([]byte, VM_mem_size)
-			mem_Mutex_temp := make([]sync.Mutex, VM_mem_size)
-
-			copy(mem_temp, *mem)
-			copy(mem_Mutex_temp, *mem_Mutex)
-
 			var wg sync.WaitGroup
 			for _, e := range thread_programs {
 
@@ -225,7 +218,7 @@ func program_run(program []string, mem *[]byte, mem_Mutex *[]sync.Mutex, mem_cou
 
 				wg.Add(1)
 				go (func() {
-					program_run(e2, &mem_temp, &mem_Mutex_temp, mem_count_temp)
+					program_run(e2, mem, mem_Mutex, mem_count_temp)
 					wg.Done()
 				})()
 			}
@@ -279,11 +272,6 @@ func interpreter_main(args []string) {
 
 	mem := make([]byte, VM_mem_size)
 	mem_Mutex := make([]sync.Mutex, VM_mem_size)
-
-	wait_chan = make([]chan bool, VM_mem_size)
-	for i := 0; i < VM_mem_size; i++ {
-		wait_chan[i] = make(chan bool)
-	}
 
 	broadcasts = make([]*broadcastchannel.Broadcaster[bool], VM_mem_size)
 
